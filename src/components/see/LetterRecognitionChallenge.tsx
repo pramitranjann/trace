@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import type { LetterContent } from "@/types/trace"
 import FeedbackBanner from "@/components/shell/FeedbackBanner"
@@ -13,14 +13,22 @@ interface LetterRecognitionChallengeProps {
 }
 
 function shuffle<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5)
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
 }
 
 export default function LetterRecognitionChallenge({
   letter,
   onComplete,
 }: LetterRecognitionChallengeProps) {
-  const options = shuffle([letter.character, ...letter.distractorLetters.slice(0, 2)])
+  const options = useMemo(
+    () => shuffle([letter.character, ...letter.distractorLetters.slice(0, 2)]),
+    [letter]
+  )
   const [selected, setSelected] = useState<string | null>(null)
   const isCorrect = selected === letter.character
 

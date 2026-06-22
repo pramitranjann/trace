@@ -30,6 +30,10 @@ export default function AirTraceChallenge({ letter, onComplete }: AirTraceChalle
   const [errorMsg, setErrorMsg] = useState("")
 
   useEffect(() => {
+    refPathRef.current = letter.tracePath
+  }, [letter])
+
+  useEffect(() => {
     let stream: MediaStream | null = null
     let running = true
 
@@ -115,6 +119,10 @@ export default function AirTraceChallenge({ letter, onComplete }: AirTraceChalle
           numHands: 1,
         })
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+        if (!running) {
+          stream.getTracks().forEach((t) => t.stop())
+          return
+        }
         if (videoRef.current) {
           videoRef.current.srcObject = stream
           videoRef.current.onloadedmetadata = () => {

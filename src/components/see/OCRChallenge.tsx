@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useMemo } from "react"
 import type { LetterContent } from "@/types/trace"
 import CameraView from "@/components/camera/CameraView"
 import ActionButton from "@/components/shell/ActionButton"
@@ -13,7 +13,7 @@ interface OCRChallengeProps {
   onComplete: (result: { text: string; matched?: LetterContent; correct: boolean }) => void
 }
 
-type Stage = "camera" | "processing" | "answer" | "feedback"
+type Stage = "camera" | "processing" | "answer"
 
 export default function OCRChallenge({ letters, onComplete }: OCRChallengeProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -35,10 +35,10 @@ export default function OCRChallenge({ letters, onComplete }: OCRChallengeProps)
       try {
         const text = await recognizeText(blob)
         trackEvent("ocr_scan_attempted", { text })
-        const found = letters.find((l) =>
-          text.toUpperCase().includes(l.character) ||
-          text.toLowerCase().includes(l.word.toLowerCase())
-        )
+        const upper = text.toUpperCase()
+        const found =
+          letters.find((l) => upper.includes(l.word.toUpperCase())) ??
+          letters.find((l) => new RegExp(`\\b${l.character}\\b`).test(upper))
         setScannedText(text || "")
         setMatched(found)
         setStage("answer")
@@ -56,7 +56,13 @@ export default function OCRChallenge({ letters, onComplete }: OCRChallengeProps)
     setTimeout(() => onComplete({ text: scannedText, matched, correct }), 900)
   }
 
-  const answerOptions = letters.slice(0, 4).map((l) => l.character)
+  const answerOptions = useMemo(() => {
+    const base = letters.slice(0, 4).map((l) => l.character)
+    if (matched && !base.includes(matched.character)) {
+      base[base.length - 1] = matched.character
+    }
+    return base
+  }, [letters, matched])
 
   return (
     <div className="flex flex-col items-center gap-5 px-4 py-6">

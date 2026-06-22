@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import type { LetterContent } from "@/types/trace"
 import { speak } from "@/lib/speech"
@@ -15,7 +15,12 @@ interface AudioMatchChallengeProps {
 }
 
 function shuffle<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5)
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
 }
 
 export default function AudioMatchChallenge({
@@ -25,7 +30,7 @@ export default function AudioMatchChallenge({
 }: AudioMatchChallengeProps) {
   const target = type === "letter" ? letter.character : letter.word
   const distractors = type === "letter" ? letter.distractorLetters.slice(0, 2) : letter.distractorWords.slice(0, 2)
-  const options = shuffle([target, ...distractors])
+  const options = useMemo(() => shuffle([target, ...distractors]), [letter, type]) // eslint-disable-line react-hooks/exhaustive-deps
   const [selected, setSelected] = useState<string | null>(null)
   const [played, setPlayed] = useState(false)
   const isCorrect = selected === target
