@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import type { LetterContent } from "@/types/trace"
 import FeedbackBanner from "@/components/shell/FeedbackBanner"
@@ -13,14 +13,23 @@ interface WordRecognitionChallengeProps {
 }
 
 function shuffle<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5)
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
 }
 
 export default function WordRecognitionChallenge({
   letter,
   onComplete,
 }: WordRecognitionChallengeProps) {
-  const options = shuffle([letter.word, ...letter.distractorWords.slice(0, 2)])
+  // Show only the emoji — no word text — and ask which word matches
+  const options = useMemo(
+    () => shuffle([letter.word, ...letter.distractorWords.slice(0, 2)]),
+    [letter]
+  )
   const [selected, setSelected] = useState<string | null>(null)
   const isCorrect = selected === letter.word
 
@@ -35,20 +44,19 @@ export default function WordRecognitionChallenge({
   return (
     <div className="flex flex-col items-center gap-8 px-4 py-8">
       <p className="text-base font-semibold text-gray-500 uppercase tracking-widest">
-        Which word starts with {letter.character}?
+        What is this?
       </p>
 
-      {/* Word + emoji */}
+      {/* Emoji only — no word text shown */}
       <motion.div
         initial={{ scale: 0.7, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="flex flex-col items-center gap-2"
+        className="flex items-center justify-center w-44 h-44 rounded-3xl bg-white border-4 border-orange-100 shadow-lg"
       >
-        <span className="text-7xl">{letter.emoji}</span>
-        <span className="text-5xl font-black text-orange-600">{letter.word}</span>
+        <span className="text-9xl select-none">{letter.emoji}</span>
       </motion.div>
 
-      {/* Choices */}
+      {/* Word choices */}
       <div className="flex flex-col gap-3 w-full max-w-xs">
         {options.map((opt) => {
           const isThis = opt === letter.word
@@ -62,7 +70,7 @@ export default function WordRecognitionChallenge({
               key={opt}
               onClick={() => handleSelect(opt)}
               disabled={!!selected}
-              className={`py-4 px-6 rounded-2xl text-xl font-bold text-left transition-colors ${style}`}
+              className={`py-4 px-6 rounded-2xl text-2xl font-bold text-left transition-colors ${style}`}
             >
               {opt}
             </button>
@@ -76,8 +84,8 @@ export default function WordRecognitionChallenge({
             status={isCorrect ? "success" : "retry"}
             message={
               isCorrect
-                ? `Yes! ${letter.emoji} ${letter.word}!`
-                : `It's ${letter.word} ${letter.emoji} — keep going!`
+                ? `Yes! That's ${letter.word}! ${letter.emoji}`
+                : `That's ${letter.word} ${letter.emoji} — nice try!`
             }
           />
         )}

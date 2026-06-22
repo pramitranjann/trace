@@ -25,6 +25,7 @@ export default function LetterRecognitionChallenge({
   letter,
   onComplete,
 }: LetterRecognitionChallengeProps) {
+  // Show the emoji, ask which letter it starts with
   const options = useMemo(
     () => shuffle([letter.character, ...letter.distractorLetters.slice(0, 2)]),
     [letter]
@@ -43,21 +44,20 @@ export default function LetterRecognitionChallenge({
   return (
     <div className="flex flex-col items-center gap-8 px-4 py-8">
       <p className="text-base font-semibold text-gray-500 uppercase tracking-widest">
-        Which letter is this?
+        What letter does this start with?
       </p>
 
-      {/* Target */}
+      {/* Emoji only — no letter shown */}
       <motion.div
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="flex items-center justify-center w-44 h-44 rounded-3xl bg-white border-4 border-orange-200 shadow-lg"
+        className="flex flex-col items-center gap-2"
       >
-        <span className="text-9xl font-black text-orange-500 select-none">
-          {letter.character}
-        </span>
+        <span className="text-9xl select-none">{letter.emoji}</span>
+        <span className="text-2xl font-bold text-gray-500">{letter.word}</span>
       </motion.div>
 
-      {/* Choices */}
+      {/* Letter choices */}
       <div className="grid grid-cols-3 gap-3 w-full max-w-xs">
         {options.map((opt) => {
           const isThis = opt === letter.character
@@ -71,7 +71,7 @@ export default function LetterRecognitionChallenge({
               key={opt}
               onClick={() => handleSelect(opt)}
               disabled={!!selected}
-              className={`py-4 rounded-2xl text-3xl font-black transition-colors ${style}`}
+              className={`py-5 rounded-2xl text-4xl font-black transition-colors ${style}`}
             >
               {opt}
             </button>
@@ -83,7 +83,11 @@ export default function LetterRecognitionChallenge({
         {selected && (
           <FeedbackBanner
             status={isCorrect ? "success" : "retry"}
-            message={isCorrect ? "Great job! 🌟" : `That's ${letter.character} — try again next time!`}
+            message={
+              isCorrect
+                ? `Yes! ${letter.emoji} ${letter.word} starts with ${letter.character}! 🌟`
+                : `${letter.word} starts with ${letter.character} — try again!`
+            }
           />
         )}
       </AnimatePresence>
