@@ -1,0 +1,21 @@
+# deps
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel
+
+# TS
+*.tsbuildinfo
+next-env.d.ts
+
+# OS
+.DS_Store
